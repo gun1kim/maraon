@@ -7,6 +7,7 @@ import com.example.maraon.entity.user.UserRoleType;
 import com.example.maraon.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -115,4 +116,26 @@ public class UserService implements UserDetailsService {
         userRepository.deleteByEmail(email);
     }
 
+    // 유저 접근 권한 체크
+    public Boolean isAccess(String email) {
+
+        // 현재 로그인되어 있는 유저의 email
+        String sessionUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        // 현재 로그인 되어 있는 유저의 role
+        String sessionRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next().getAuthority();
+
+        // 수직적으로 ADMIN이면 무조건 접근 가능
+        if ("ROLE_ADMIN".equals(sessionRole)) {
+            return true;
+        }
+
+        // 수평적으로 특정 행위를 수행할 email에 대해 세션(현재 로그인한) email과 같은지
+        if (email.equals(sessionUserEmail)) {
+            return true;
+        }
+
+        // 나머지 다 불가
+        return false;
+
+    }
 }
